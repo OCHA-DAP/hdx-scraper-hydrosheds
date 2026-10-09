@@ -16,6 +16,7 @@ from hdx.location.country import Country
 from hdx.utilities.retriever import Retrieve
 from pandas import isna
 from shapely.validation import make_valid
+from slugify import slugify
 
 logger = logging.getLogger(__name__)
 
@@ -165,7 +166,9 @@ class Pipeline:
 
             to_zip_file_list = list(Path(country_folder).iterdir())
             self._last_temp_files.extend(to_zip_file_list)
-            output_zip = join(self._tempdir, f"{data_type}_{iso3.lower()}.zip")
+            output_zip = join(
+                self._tempdir, slugify(f"{iso3} {data_info['title']}") + ".zip"
+            )
             self._last_temp_files.append(output_zip)
             with zipfile.ZipFile(
                 output_zip, mode="w", compression=zipfile.ZIP_DEFLATED
@@ -178,7 +181,7 @@ class Pipeline:
             dataset = Dataset(
                 {
                     "name": f"{data_type.lower()}-{iso3.lower()}",
-                    "title": f"{country_name}: {data_type}",
+                    "title": f"{country_name}: {data_info['title']}",
                     "notes": data_info["notes"],
                 }
             )
@@ -197,7 +200,7 @@ class Pipeline:
             resource = Resource(
                 {
                     "name": basename(output_zip),
-                    "description": f"{data_type} zipped shapefile for {country_name}",
+                    "description": data_info["resource_description"],
                 }
             )
             resource.set_format("SHP")
